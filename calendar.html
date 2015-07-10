@@ -1,0 +1,224 @@
+
+<html>
+<head><script src="javascripts/d3.v3.min.js"></script>
+<script src="javascripts/topojson.v1.min.js"></script>
+<script src="javascripts/jquery.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="javascripts/jquery-ui.min.js"></script>
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+	
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
+
+<style type="text/css">
+body{font-family: Arial, sans-serif;font-size:10px;}
+.axis path,.axis line {fill: none;stroke:#b6b6b6;shape-rendering: crispEdges;}
+/*.tick line{fill:none;stroke:none;}*/
+.tick text{fill:#999;}
+g.journal.active{cursor:pointer;}
+text.label{font-size:12px;font-weight:bold;cursor:pointer;}
+text.value{font-size:12px;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+function sortByTotal(array){
+	array.sort(function(a, b){
+	 return b.total-a.total
+	})
+	return array
+}
+
+function sortByYear(array){
+	
+	array.sort(function(a, b){
+	//averageYears(a.books)	
+	
+	 return findLastYear(b.books) - findLastYear(a.books)	
+	})
+	return array
+}
+function findGap(array){
+	max =0
+	min = 2020
+	for(var i in array){
+		year = parseFloat(array[i][0])
+		if(year>max){
+			max = year
+		}
+		if(year<min){
+			min = year
+		}
+	}
+	return max-min
+}
+
+function averageYears(array){
+	sum = 0
+	for(var i in array){
+		year = parseFloat(array[i][0])
+		sum+=year
+	}
+	return sum/array.length
+}
+
+function findLastYear(array){
+	max =0
+	for(var i in array){
+		year = parseFloat(array[i][0])
+		if(year>max){
+			max = year
+		}
+	}
+	return max
+}
+
+function truncate(str, maxLength, suffix) {
+	if(str.length > maxLength) {
+		str = str.substring(0, maxLength + 1); 
+		str = str.substring(0, Math.min(str.length, str.lastIndexOf(" ")));
+		str = str + suffix;
+	}
+	return str;
+}
+
+var margin = {top: 20, right: 200, bottom: 0, left: 20},
+	width = 1000,
+	height = 10000;
+
+var start_year = 1895,
+	end_year = 2014;
+
+var c = d3.scale.category20c();
+
+var x = d3.scale.linear()
+	.range([0, width]);
+
+var xAxis = d3.svg.axis()
+	.scale(x)
+	.orient("top");
+
+var formatYears = d3.format("0000");
+xAxis.tickFormat(formatYears);
+
+var svg = d3.select("body").append("svg")
+	.attr("width", width + margin.left + margin.right)
+	.attr("height", height + margin.top + margin.bottom)
+	.style("margin-left", margin.left + "px")
+	.append("g")
+	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// var dataset = [[ [2002, 8], [2003, 1], [2004, 1], [2005, 1], [2006, 3], [2007, 3], [2009, 3], [2013, 3]], [ [2004, 5], [2005, 1], [2006, 2], [2010, 20], [2011, 3] ] ,[ [2001, 5], [2005, 15], [2006, 2], [2010, 20], [2012, 25] ]];
+// var dataset = [ [2001, 5], [2005, 15], [2006, 2], [2010, 20], [2012, 25] ];
+
+d3.json("authors.json", function(data) {
+	data = sortByYear(data)
+	console.log(data)
+	x.domain([start_year, end_year]);
+	var xScale = d3.scale.linear()
+		.domain([start_year, end_year])
+		.range([0, width]);
+
+	svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + 0 + ")")
+		.call(xAxis);
+	var rowHeight = 12
+	for (var j = 0; j < data.length; j++) {
+		var g = svg.append("g").attr("class","author");
+
+		var circles = g.selectAll("circle")
+			.data(data[j]['books'])
+			.enter()
+			.append("circle");
+
+		var text = g.selectAll("text")
+			.data(data[j]['books'])
+			.enter()
+			.append("text");
+
+		var rScale = d3.scale.linear()
+			.domain([1,11])
+			.range([6, 2]);
+			
+		var oScale = d3.scale.linear()
+			.domain([1,11])
+			.range([1, 0]);
+			
+		var cScale = d3.scale.linear()
+			.domain([1,11])
+			.range(["red","#fff"]);
+		var rects = g.selectAll("rect")
+			.data(data[j]['books'])
+			.enter()
+			.append("rect");
+		
+		
+		rects
+			.attr("y", j*rowHeight+25-rowHeight/2)
+			//.attr("y",function(d,i){return i*rowHeight})
+			.attr("x",0)
+			.attr("class","rect")
+			.attr("width",width)
+			.attr("height",1)
+			.attr("fill", function(d) { return "#888"; })
+			.attr("stroke","none")
+			.attr("opacity",.1)
+			
+		
+			
+		circles
+			.attr("cx", function(d, i) { return xScale(d[0]); })
+			.attr("cy", j*rowHeight+20)
+			//.attr("r", function(d) { return rScale(d[1]); })
+			.attr("r",5)
+			.style("fill", function(d) { return cScale(d[1]); })
+			.on("mouseover",function(d){console.log(d)})
+			.attr("opacity",function(d){oScale(d[1])})
+			;
+
+		text
+			.attr("y", j*rowHeight+25)
+			.attr("x",function(d, i) { return xScale(d[0])-5; })
+			.attr("class","value")
+			.text(function(d){ return d[1]; })
+			.attr("fill", function(d) { return "#888"; })
+			.style("display","none")
+			.style("font-size",9)
+			.style("letter-spacing",-1);
+
+		g.append("text")
+			.attr("y", j*rowHeight+25)
+			.attr("x",width+20)
+			.attr("class","label")
+			.text(truncate(data[j]['name'],30,"..."))
+			.attr("fill", function(d) { return "#888"; })
+			.on("mouseover", mouseover)
+			.on("mouseout", mouseout);
+
+	};
+
+	function mouseover(p) {
+		var g = d3.select(this).node().parentNode;
+		d3.select(g).selectAll("circle").style("display","none");
+		d3.select(g).selectAll("text.value").style("display","block");
+	}
+
+	function mouseout(p) {
+		var g = d3.select(this).node().parentNode;
+		d3.select(g).selectAll("circle").style("display","block");
+		d3.select(g).selectAll("text.value").style("display","none");
+	}
+});
+
+</script>
+
+</body>
+</html>
