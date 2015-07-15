@@ -155,6 +155,7 @@ function drawAuthor(data){
 	}
 	var author =data[0][5]
 	var condensedArray = []	
+	condensedArray.push([0,[" "]])
 	for(var year in condensed){
 		condensedArray.push([parseInt(year),condensed[year]])
 	}
@@ -184,7 +185,7 @@ function drawAuthor(data){
 	    .attr("stroke","#000")
 	    .style("stroke-dasharray", ("3, 3"))  // <== This line here!!
 	
-	svg.selectAll("text")
+	svg.selectAll("text").select(".verticalLabel")
 		.data(condensedArray)
 		.enter()
 		.append("text")
