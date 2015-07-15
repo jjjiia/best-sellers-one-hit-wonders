@@ -1,0 +1,202 @@
+
+<html>
+<head><script src="javascripts/d3.v3.min.js"></script>
+<script src="javascripts/topojson.v1.min.js"></script>
+<script src="javascripts/jquery.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="javascripts/jquery-ui.min.js"></script>
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+	
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
+
+<style type="text/css">
+body{font-family: Arial, sans-serif;font-size:12px;}
+.axis path,.axis line {fill: none;stroke:#b6b6b6;shape-rendering: crispEdges;}
+/*.tick line{fill:none;stroke:none;}*/
+.tick text{fill:#000;}
+g.journal.active{cursor:pointer;}
+text.label{font-size:12px;cursor:pointer;}
+text.value{font-size:12px;}
+#title{ font-size:16px;color:#000;padding:20px;}
+.verticalLabel{	writing-mode: tb-rl;}
+</style>
+</head>
+<body>
+<div id= "title">Where authors go after their first bestseller</br>
+	x = year, y = rank</div>
+<script type="text/javascript">
+
+var svg = d3.select("body").append("svg")
+	.attr("width", 1100)
+	.attr("height",800)
+	.append("g")
+
+var colorScale = d3.scale.linear().domain([0,10]).range(["black","red"])
+var yScale = d3.scale.linear().domain([-15,15]).range([-200,200])
+var xScale = d3.scale.linear().domain([0,20]).range([0,600])
+function sortArray(array){
+	array.sort(function(a, b){
+		return a[0] - b[0]
+	})
+	return array
+}
+function sortArrayByRank(array){
+	array.sort(function(a, b){
+		return a[1] - b[1]
+	})
+	return array
+}	
+d3.json("authors.json", function(data) {
+	
+	for(var i in data){
+		//var booksByRank = sortArrayByRank(data[i].books)
+		var author = data[i].name
+		var booksByYear = sortArray(data[i].books)
+		var minRank = booksByYear[0][1]
+		var minYear = booksByYear[0][0]
+		//console.log(["mins",minYear,minRank])
+		var yearScale = d3.scale.linear().domain([minYear,minYear+40]).range([0,800])
+		//var rankScale = d3.scale.linear().domain([minRank-10,minRank+10]).range([0,600])
+		var rankScale = d3.scale.linear().domain([minRank-10,minRank+10]).range([0,400])
+		
+		var lineData = []
+		for(var j in booksByYear){
+			var year = booksByYear[j][0]
+			var rank = booksByYear[j][1]
+			var title = booksByYear[j][2]
+			//console.log(year,rank)			
+			lineData.push([yearScale(year),rankScale(rank),title,year,rank,author])
+		}
+		
+		if(lineData.length > 2){
+			drawLine(lineData)
+		}
+
+	}
+svg.append("circle").attr("cx",80).attr("cy",200).attr("r",5)
+svg.append("text").attr("x",70).attr("y",205).text("1st Bestseller").attr("text-anchor","end")
+	
+	//var data = [[10,20],[200,100],[80,120], [40, 80]];
+	//drawLine(data)
+
+});
+
+
+function drawLine(lineData){
+var author = lineData[0][3]
+var line = d3.svg.line()
+    .x(function(d){return d[0]+80;})
+    .y(function(d){return d[1];})
+    .interpolate("basis");
+svg.append("path")
+    .attr("stroke", "black")
+    .attr("stroke-width",1)
+	.attr("opacity",.2)
+	.attr("fill","none")
+    .attr("d", line(lineData))
+svg.append("path")
+    .attr("stroke", "yellow")
+    .attr("stroke-width",12)
+	.attr("opacity",0)
+	.attr("fill","none")
+    .attr("d", line(lineData))
+	.on("mouseover",function(){
+		d3.select(this).attr("opacity",.5)
+		//console.log(author)
+	//console.log(lineData[lineData.length-1])
+		
+		svg.append("text")
+		.text(lineData[0][5])
+		.attr("x",lineData[lineData.length-1][0]+90)
+		.attr("y",lineData[lineData.length-1][1])
+		.attr("class","author")
+		.attr("text-anchor","start")
+		.attr("fill","#000")
+		
+		drawAuthor(lineData)
+	})
+	.on("mouseout",function(){
+		d3.select(this).attr("opacity",0)
+		d3.selectAll(".author").remove()
+		d3.selectAll(".bookCircle").remove()
+		d3.selectAll(".verticalLabel").remove()
+		//console.log(author)
+	});
+	
+//svg.selectAll("circle")
+//	.data(data)
+//	.enter()
+//	.append("circle")
+//	.attr("class",function(d){return d[2]})
+//	.attr("cx",function(d){return d[0]+20})
+//	.attr("cy",function(d){return 400; return d[1]})
+//	.attr("r",3)
+//	.attr("fill","red")
+}
+function drawAuthor(data){
+	var condensed = {}
+	//console.log(data)
+	for (var i in data){
+		//console.log(data[i])
+		var x = data[i][0]		
+		if(condensed[x]==undefined){
+			condensed[x] = {}
+			condensed[x]["books"]=""
+			condensed[x]["books"]+=data[i][3]+": "+data[i][2]+" ("+data[i][4]+")"
+		}else{
+			condensed[x]["books"]+=", "+ data[i][2]+" ("+data[i][4]+")"
+		}
+	}
+	var author =data[0][5]
+	var condensedArray = []	
+	for(var year in condensed){
+		condensedArray.push([parseInt(year),condensed[year]])
+	}
+	//console.log(condensedArray)
+	
+	svg.selectAll("circle")
+		.data(condensedArray)
+		.enter()
+		.append("circle")
+		.attr("class","bookCircle")
+		.attr("cx",function(d){return d[0]+90})
+		.attr("cy",390)
+	//	.attr("cy",function(d){return d[1]})
+		.attr("r",2)
+	
+	svg.data(data)
+		.enter()
+		.append("line")
+		.attr(
+			{
+			x1:function(d){console.log(d);return d[0]},
+			y1:	function(d){return d[1]},
+			x2:function(d){return d[0]},
+			y2:	400
+			})
+		.attr("class","dashline")
+	    .attr("stroke","#000")
+	    .style("stroke-dasharray", ("3, 3"))  // <== This line here!!
+	
+	svg.selectAll("text")
+		.data(condensedArray)
+		.enter()
+		.append("text")
+		.attr("class","verticalLabel")
+		.text(function(d){return d[1].books})
+		.attr("x",function(d){return d[0]+90})
+		.attr("y",400)
+}
+def drawDashLine(data){
+	
+}
+</script>
+
+</body>
+</html>

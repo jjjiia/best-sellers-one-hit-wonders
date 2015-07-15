@@ -41,7 +41,7 @@ function sortByYear(array){
 	
 	array.sort(function(a, b){
 	//averageYears(a.books)	
-	 //return findGap(b.books) - findGap(a.books)	
+	 return findGap(b.books) - findGap(a.books)	
 	 return averageYears(b.books) - averageYears(a.books)	
 	
 	 return findLastYear(b.books) - findLastYear(a.books)	
@@ -155,7 +155,7 @@ d3.json("authors.json", function(data) {
 		.attr("class", "x axis")
 		.attr("transform", "translate(0," + 0 + ")")
 		.call(xAxis);
-	var rowHeight = 12
+	var rowHeight = 24
 	for (var j = 0; j < data.length; j++) {
 		var g = svg.append("g").attr("class","author");
 	var rects = g.selectAll("rect")
@@ -187,7 +187,7 @@ d3.json("authors.json", function(data) {
 		
 		
 		rects
-			.attr("y", j*rowHeight+25-rowHeight/2)
+			.attr("y", j*rowHeight+32-rowHeight/2)
 			//.attr("y",function(d,i){return i*rowHeight})
 			.attr("x",0)
 			.attr("class","rect")
