@@ -28,7 +28,7 @@ text.value{font-size:12px;}
 </style>
 </head>
 <body>
-<div id= "title">Authors after their first bestseller</br>
+<div id= "title">1st and subsequent bestsellers (on publisher's weekly top 10 each year)</br>
 	x = year, y = rank</div>
 <script type="text/javascript">
 
@@ -60,22 +60,32 @@ d3.json("authors.json", function(data) {
 		var booksByYear = sortArray(data[i].books)
 		var minRank = booksByYear[0][1]
 		var minYear = booksByYear[0][0]
+		if (minRank == 0){
+			minRank = booksByYear[1][1]
+		}
 		//console.log(["mins",minYear,minRank])
 		var yearScale = d3.scale.linear().domain([minYear,minYear+40]).range([0,800])
 		//var rankScale = d3.scale.linear().domain([minRank-10,minRank+10]).range([0,600])
 		var rankScale = d3.scale.linear().domain([minRank-10,minRank+10]).range([0,400])
 		
 		var lineData = []
+		var noRank = []
 		for(var j in booksByYear){
 			var year = booksByYear[j][0]
 			var rank = booksByYear[j][1]
 			var title = booksByYear[j][2]
-			//console.log(year,rank)			
+			//console.log(year,rank)
+			if(rank > 0){			
 			lineData.push([yearScale(year),rankScale(rank),title,year,rank,author])
+				
+			}else{
+			noRank.push([yearScale(year),rankScale(rank),title,year,rank,author])
+			
+			}
 		}
 		
 		if(lineData.length > 2){
-			drawLine(lineData)
+			drawLine(lineData,noRank)
 		}
 
 	}
@@ -90,7 +100,7 @@ svg.append("text").attr("x",70).attr("y",255).text("- in rank").attr("text-ancho
 });
 
 
-function drawLine(lineData){
+function drawLine(lineData,noRankData){
 var author = lineData[0][3]
 var line = d3.svg.line()
     .x(function(d){return d[0]+80;})
@@ -121,7 +131,7 @@ svg.append("path")
 		.attr("text-anchor","start")
 		.attr("fill","#000")
 		
-		drawAuthor(lineData)
+		drawAuthor(lineData,noRankData)
 	})
 	.on("mouseout",function(){
 		d3.select(this).attr("opacity",0)
@@ -143,7 +153,7 @@ svg.append("path")
 //	.attr("r",3)
 //	.attr("fill","red")
 }
-function drawAuthor(data){
+function drawAuthor(data,noRankData){
 	var condensed = {}
 	//console.log(data)
 	for (var i in data){
@@ -198,6 +208,37 @@ function drawAuthor(data){
 		.text(function(d){return d[1].books})
 		.attr("x",function(d){return d[0]+80})
 		.attr("y",400)
+			
+	console.log(noRankData)
+		var noRankCondensed = {}
+	for (var i in noRankData){
+		//drawDottedLine(noRankData[i])
+
+		//console.log(data[i])
+		var x = noRankData[i][0]		
+		if(noRankCondensed[x]==undefined){
+			noRankCondensed[x] = {}
+			noRankCondensed[x]["books"]=""
+			noRankCondensed[x]["books"]+=noRankData[i][3]+": "+noRankData[i][2]
+		}else{
+			noRankCondensed[x]["books"]+=", "+ noRankData[i][2]
+		}
+	}
+	var author =noRankData[0][5]
+	var noRankCondensedArray = []	
+	noRankCondensedArray.push([0,[" "]])
+	for(var year in noRankCondensed){
+		noRankCondensedArray.push([parseInt(year),noRankCondensed[year]])
+	}
+	svg.selectAll("text .noRank").select(".verticalLabel .noRank")
+		.data(noRankCondensedArray)
+		.enter()
+		.append("text")
+		.attr("fill","red")
+		.attr("class","verticalLabel noRank")
+			.text(function(d){return d[1].books})
+		.attr("x",function(d){return d[0]+80})
+		.attr("y",600)
 }
 
 function drawDottedLine(data){

@@ -27,7 +27,7 @@ text.value{font-size:12px;}
 </style>
 </head>
 <body>
-<div id= "title">Longest gap between bestsellers</div>
+<div id= "title">Bestsellers(publishers weekly)</div>
 <script type="text/javascript">
 
 function sortByTotal(array){
@@ -41,8 +41,8 @@ function sortByYear(array){
 	
 	array.sort(function(a, b){
 	//averageYears(a.books)	
-	 return findGap(b.books) - findGap(a.books)	
-	 return averageYears(b.books) - averageYears(a.books)	
+	 //return findGap(b.books) - findGap(a.books)	
+	 //return averageYears(b.books) - averageYears(a.books)	
 	
 	 return findLastYear(b.books) - findLastYear(a.books)	
 	})
